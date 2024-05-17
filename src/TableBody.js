@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import DOMPurify from 'dompurify';
 import Utils from './util';
 import Const from './Const';
 import TableRow from './TableRow';
@@ -33,7 +34,7 @@ class TableBody extends Component {
     const unselectable = this.props.selectRow.unselectable || [];
     const isSelectRowDefined = Utils.isSelectRowDefined(this.props.selectRow.mode);
     const tableHeader = Utils.renderColGroup(this.props.columns,
-        this.props.selectRow, this.props.expandColumnOptions, version);
+      this.props.selectRow, this.props.expandColumnOptions, version);
     const inputType = this.props.selectRow.mode === Const.ROW_SELECT_SINGLE ? 'radio' : 'checkbox';
     const CustomComponent = this.props.selectRow.customComponent;
     const enableKeyBoardNav = (keyBoardNav === true || typeof keyBoardNav === 'object');
@@ -53,11 +54,11 @@ class TableBody extends Component {
       expandColSpan += 1;
     }
 
-    let tableRows = this.props.data.map(function(data, r) {
-      const tableColumns = this.props.columns.filter(_ => _ != null).map(function(column, i) {
+    let tableRows = this.props.data.map((data, r) => {
+      const tableColumns = this.props.columns.filter(_ => _ != null).map((column, i) => {
         const fieldValue = data[column.name];
         const isFocusCell = r === y && i === x;
-        if (column.name !== this.props.keyField && // Key field can't be edit
+        if (column.name !== this.props.keyField && // Key field can't be edited
           column.editable && // column is editable? default is true, user can set it false
           column.editable.readOnly !== true &&
           this.state.currEditCell !== null &&
@@ -65,8 +66,8 @@ class TableBody extends Component {
           this.state.currEditCell.cid === i &&
           noneditableRows.indexOf(data[this.props.keyField]) === -1) {
           let editable = column.editable;
-          const format = column.format ? function(value) {
-            return column.format(value, data, column.formatExtraData, r).replace(/<.*?>/g, '');
+          const format = column.format ? (value) => {
+            return column.format(value, data, column.formatExtraData, r);
           } : false;
           if (Utils.isFunction(column.editable)) {
             editable = column.editable(fieldValue, data, r, i);
@@ -112,9 +113,7 @@ class TableBody extends Component {
           if (typeof column.format !== 'undefined') {
             formattedValue = column.format(fieldValue, data, column.formatExtraData, r);
             if (!React.isValidElement(formattedValue)) {
-              columnChild = (
-                <div dangerouslySetInnerHTML={ { __html: formattedValue } }></div>
-              );
+              columnChild = <div>{ DOMPurify.sanitize(formattedValue) }</div>;
             } else {
               columnChild = formattedValue;
             }
